@@ -9,21 +9,27 @@ Credits & Licencing:
 bar.png -
   Author: Calinou
   Licence: CC0 public domain
+  
 ball.png -
   Author: Flix Entertainment
   Lincence: CC0 public domain
             CC-BY-4.0 https://creativecommons.org/licenses/by/4.0/
+            
 blocks.png - 
   Author: John B. Marine / JohnM25
   Lincence: CC-BY-3.0 https://creativecommons.org/licenses/by/3.0/
+  
 space.png - 
   Author: kurtk84
   Lincence: CC0 public domain
+  
 wall.png - 
   Author: OminousPark
   Lincence: CC0 public domian
+  
 explosion.wav - 
   Author: TinyWorlds
   Lincence: CC0 public domain
+  
 All other audio file credits:
   Author: Shoffer / physic rink
