@@ -3,7 +3,7 @@ Block breaking game using html, javascript, and phaser3 libraries.
 
 A simple block breaking game where the user moves a bar using the left and right arrow keys to bouce a ball
 that destorys the blocks it comes into contact with. This game was developed for personal and educational use
-and is not for redistribution. All audio and image files and not original but were pulled from OpenGameArt.
+and is not for redistribution. All audio and image files are not original but were pulled from OpenGameArt.
 
 Credits & Licencing:
 bar.png -
