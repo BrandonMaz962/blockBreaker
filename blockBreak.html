@@ -1,0 +1,257 @@
+<!DOCTYPE=html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Block Breaker</title>
+	<script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+	</style>
+</head>
+<body>
+
+<!--
+Block Breaker
+By: Brandon Mazurkiewicz
+
+A simple block breaking game where the user moves a bar using the left and right arrow keys to bouce a ball
+that destorys the blocks it comes into contact with. All sprites and audio files are not origonal and have
+been sourced from OpenGameArt, all credits in the README file. 
+
+Last modified 4/9/2024
+-->
+
+<script>
+
+//Configure game settings and screen size
+var config = {
+	type: Phaser.AUTO,
+	width: 1000,
+	height: 600,
+	physics: {
+		default: 'arcade',
+		arcade: {
+		gravity: {y: 0},
+		debug: false
+		}
+	},
+	scene: {
+		preload: preload,
+		create: create,
+		update: update
+	}
+};
+
+//Declare global game variables 
+var player;
+var walls;
+var balls;
+var cursors;
+var score = 0;
+var scoreText;
+var timeText;
+var iTime=0,timer=setInterval(function(){iTime++},1000);
+var game = new Phaser.Game(config);
+
+//Load in game assets
+function preload () {
+
+	//Images and sprites
+	this.load.image('space', 'assets/space.png');
+	this.load.image('player', 'assets/bar.png');
+	this.load.image('wall', 'assets/wall.png');
+	this.load.image('ball', 'assets/ball.png');	
+
+	//block sprit sheet 15x20 blocks 962x643 pixels each block 64.13x32.15 pixels
+	this.load.spritesheet('blocks', 'assets/blocks.png', {frameWidth: 64.133, frameHeight: 32.15});
+	//scorebox spritsheet 10x8 boxes 1280x1024 pixels each box 128x128 pixels
+	this.load.spritesheet('scorebox', 'assets/scoreBoxSheet.png', {frameWidth: 128, frameHeight: 128});
+	
+	//Audio files
+	this.load.audio('beep', ['assets/ping_pong_8bit_beeep.ogg']);
+	this.load.audio('plop', ['assets/ping_pong_8bit_plop.ogg']);
+	this.load.audio('explosion', ['assets/explosion.wav']);
+	this.load.audio('background', ['assets/Club Nova.wav']);
+}
+
+function create () {
+
+	//set background image
+	var space = this.add.image(600, 300, 'space');
+	space.displayWidth = game.config.width
+	space.displayHeight = game.config.height
+
+	//set refrences for game sounds and play background audio
+	beep = this.sound.add('beep', {loop: false});
+	plop = this.sound.add('plop', {loop: false});
+	explode = this.sound.add('explosion', {loop: false});
+	this.background = this.sound.add('background');
+	this.background.loop = true;
+	this.background.play();
+
+	//Create walls for game area
+	walls = this.physics.add.staticGroup();
+
+	let startYleft = 56;
+	for(let i = 0; i < 6; i++){
+		walls.create(72, startYleft, 'wall').setScale(2).refreshBody();
+		startYleft += 112;
+	}
+
+	let startXtop = 217;
+	for(let i = 0; i < 9; i ++){
+		walls.create(startXtop, -41, 'wall').setScale(2).refreshBody();
+		startXtop += 72;
+	}
+	
+	let startYright = 56;
+	for(let i = 0; i < 6; i++){
+		walls.create(928, startYright, 'wall').setScale(2).refreshBody();
+		startYright += 112;
+	}
+
+	//Create player and set properties
+	player = this.physics.add.sprite(500, 550, 'player');
+	player.scaleX = 1.1;
+	player.scaleY = 2;
+	player.setCollideWorldBounds(true);
+	player.setImmovable(true);
+	player.pushable = false;
+
+	
+	//Get user input from keyboard
+	cursors = this.input.keyboard.createCursorKeys();
+
+	//Create blocks and set properties
+	let x = 180;
+	let y = 50;
+
+	blocks = this.physics.add.group();
+
+	for(let j = 0; j < 7; j++){
+		for(let k = 0; k < 11; k++){
+			var block = this.add.image(x, y, 'blocks', (Math.floor(Math.random() * 5)));
+			blocks.add(block);
+			x = x + 64.13;
+		}
+	x = 180;	
+	var block = this.add.image(x, y, 'blocks', (Math.floor(Math.random() * 5)));
+	blocks.add(block);
+	y = y + 32.15;
+	}
+
+
+	//Create and position text boxes
+	var scoreBox = this.add.image(70, 90, 'scorebox', 53);
+	var infoBox = this.add.image(930, 90, 'scorebox', 53);
+	
+
+	//Create ball and set properties
+	balls = this.physics.add.group();
+
+	var ball = balls.create(500, 500, 'ball').setScale(.1);
+	ball.setBounce(1);
+	ball.setCollideWorldBounds(true);
+	ball.body.onWorldBounds = true;
+	ball.setVelocity(350,350);
+	ball.allowGravity = false;
+	ball.body.drag.x = 1;
+	ball.body.drag.y = 1;
+
+	//Check if ball has hit bottom of the screen 
+	ball.body.world.on('worldbounds', function(body){
+		if(body.gameObject == this){
+			explode.play();
+			alert("GAME OVER! Try again to clear all the blocks.");
+			this.setActive(false);
+			this.setVisable(false);
+		}
+	}, ball);
+
+
+	//Set up colliders between game objects
+	this.physics.add.collider(balls, walls, hitWall, null, this);
+	this.physics.add.collider(balls, player, hitPlayer, null, this);
+	this.physics.add.collider(player, walls);
+	this.physics.add.collider(balls, blocks, hitBlock, null, this);
+
+	//Add initial text to score box
+	scoreText = this.add.text(20, 60, 'Score: 0', {fontSize: '20px', color: 'rgb(255,255,255)' });
+	timeText = this.add.text(20, 85, 'Time: ', {fontSize: '20px', color: 'rgb(255,255,255)' });
+
+	//Add text to game information box
+	this.add.text(880, 60, 'Block Break', {fontSize: '15px', color: 'rgb(255,255,255)' });
+	this.add.text(880, 75, 'By: Brandon M', {fontSize: '10px', color: 'rgb(255,255,255)' });
+	this.add.text(880, 88, 'Controls: ', {fontSize: '15px', color: 'rgb(255,255,255)' });
+	this.add.text(880, 102, '<-- Move Left', {fontSize: '10px', color: 'rgb(255,255,255)' });
+	this.add.text(880, 112, '--> Move Right', {fontSize: '10px', color: 'rgb(255,255,255)' });
+}
+
+function update () {
+
+	//Handle player movement 
+	if(cursors.left.isDown && player.body.x > 150){
+		player.setVelocityX(-400);
+	}else
+	if(cursors.right.isDown && player.body.x < 675){
+		player.setVelocityX(400);
+	}else {
+		player.setVelocityX(0);
+	}
+
+	//Update game score and time display
+	scoreText.setText('Score:' + score);
+	timeText.setText('Time:' + iTime);
+
+}
+
+function hitBlock(ball, block) {
+
+	//Handle ball velocity after block collision
+	if(ball.body.touching.up){
+		ball.body.velocity.y = 350;
+	}
+	if(ball.body.touching.down){
+		ball.body.velocity.y = -350;
+	}
+	if(ball.body.touching.left){
+		ball.body.velocity.x = -350;
+	}
+	if(ball.body.touching.right){
+		ball.body.velocity.x = 350;
+	}
+	
+	//destroy block after ball collision
+	block.destroy();
+	//play sound effect
+	beep.play();
+	//increment player score
+	score += 1;
+
+	//Check to see if all blocks have been destoryed
+	if(score === 84){
+                x = iTime;
+                timeText.setText('Time:' + x);
+                alert("Congradulations you win! It took you " + x + "seconds to clear all the blocks. Play again to set a new record." );
+	}
+}
+
+function hitWall(ball, wall){
+	
+	//Play sound effect when ball bounces off wall
+	plop.play();
+}
+
+function hitPlayer(ball, player){
+
+	//Play sound effect when ball bounces off player
+        plop.play();
+}
+
+</script>
+
+</body>
+</html>
+
