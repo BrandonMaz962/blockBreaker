@@ -5,7 +5,10 @@ A simple block breaking game where the user moves a bar using the left and right
 that destorys the blocks it comes into contact with. This game was developed for personal and educational use
 and is not for redistribution. All audio and image files are not original but were pulled from OpenGameArt.
 
+Link to play for yourself: https://student.computing.gvsu.edu/mazurkib/phaser/blockBreak.html
+
 Credits & Licencing:
+
 bar.png -
   Author: Calinou
   Licence: CC0 public domain
